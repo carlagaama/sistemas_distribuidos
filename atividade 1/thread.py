@@ -3,81 +3,76 @@
 import threading
 import time
 import socket
+import sys
 
 class client(threading.Thread):
-   def __init__(self, processID, processName, num_processes, msg):
+   def __init__(self, procID):
       threading.Thread.__init__(self)
-      self.processID = processID
-      self.processName = processName
-      self.num_processes = num_processes
-      self.msg = msg
-      
+      self.procID = procID
+
    def run(self):
-      for i in range(0, int(num_processes)):
+      for i in range(1, (total_process+1)):
          try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(0.2)
-            server_address = ('localhost', 10000+i)
+            server_address = ('localhost', 2000 + i)
             sock.connect(server_address)
-            sock.send((self.msg).encode())
-
-            while True:
-               print("Esperando ACKS...")
-               try:
-                  data, server = sock.recvfrom(64)
-                  print("Ack recebido do processo: " + str(i))
-                  break
-               except socket.timeout:
-                  print("timeout!")
-
+            sock.send(self.procID.encode())
+            try:
+               data, server = sock.recvfrom(64)
+               print("Recebi o ACK do Processo: ", str(data.decode()))
+            finally:
+               sock.close()
+         except socket.timeout:
+            print("TIME OUT!")
          finally:
             sock.close()
 
 class server(threading.Thread):
-   def __init__(self, processID, processName):
+   def __init__(self, procID):
       threading.Thread.__init__(self)
-      self.processID = processID
-      self.processName = processName
-      self.timeStamp = time.gmtime()
-      #pode trocar para milisegundos mesmo, pra notar a diferença
-      print(self.processName + time.strftime(" inicializado em: %X", self.timeStamp))
+      self.procID = procID
+      self.list = []
 
    def run(self):
       sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      sock.bind(('localhost', 10000+self.processID))
+      sock.bind(('localhost', (2000+int(sys.argv[1]))))
+      sock.listen(1)
+      print("[PROCESSO - "+self.procID+"] ouvindo....")
 
       while True:
-         print(self.processName + " escutando...")
-         sock.listen(1)
          conn, address = sock.accept()
          data = conn.recv(64).decode()
 
-         print(str(self.processName) + " - Recebi: " + str(data))
-         conn.sendto("ACK do Processo".encode(), address)
+         import pdb
+         pdb.set_trace()
+
+         print("LISTA ANTES DO ACK: " + str(self.list))
+
+         print("Recebido mensagem do processo: " + str(data))
+         if (data not in self.list) and (data is not self.procID):
+            for i in range(1, (total_process+1)):
+               try:
+                  sock_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                  server_address = ('localhost', 2000 + i)
+                  sock_server.connect(server_address)
+                  sock_server.send(self.procID.encode())
+                  
+                  print("Enviando ACK para processo: "+str(i))
+                  conn.send((data).encode())
+                  (self.list).append(i)
+                  print("LISTA DEPOIS DO ACK: " + str(self.list))
          
-      
-      print("Oi, eu sou a thread servidor do processo "+self.processName)
+               finally:
+                  sock_server.close()
 
-num_processes = input("Quantos processos serão?\n")
-clients = []
-servers = []
-flag = 0
+total_process = 3
+procID = sys.argv[1]
 
-for i in range(0, int(num_processes)):
-  # thread = client(i, ("Processo %s" % i))
-  # clients.append(thread)
-  # thread.start()
-   thread = server(i, ("Processo %s" % i))
-   servers.append(thread)
-   thread.start()
+op = client(procID)
+dp = server(procID)
+dp.start()
 
-print("Processos inicializados!\n")
-
-time.sleep(0.1)
-
-for i in range(0, int(num_processes)):
-   thread = client(i, ("Processo %s" % i), num_processes, "oie")
-   thread.start()
-
-
-   
+input("Pressione enter pra começar!\n")
+print("Começou!")
+op.start()
