@@ -32,7 +32,8 @@ class server(threading.Thread):
    def __init__(self, procID):
       threading.Thread.__init__(self)
       self.procID = procID
-      self.list = []
+      self.list = set([])
+      self.acks_sent = 0
 
    def run(self):
       sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -44,13 +45,8 @@ class server(threading.Thread):
          conn, address = sock.accept()
          data = conn.recv(64).decode()
 
-         import pdb
-         pdb.set_trace()
-
-         print("LISTA ANTES DO ACK: " + str(self.list))
-
          print("Recebido mensagem do processo: " + str(data))
-         if (data not in self.list) and (data is not self.procID):
+         if self.acks_sent == 0:
             for i in range(1, (total_process+1)):
                try:
                   sock_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -59,11 +55,12 @@ class server(threading.Thread):
                   sock_server.send(self.procID.encode())
                   
                   print("Enviando ACK para processo: "+str(i))
-                  conn.send((data).encode())
-                  (self.list).append(i)
-                  print("LISTA DEPOIS DO ACK: " + str(self.list))
+                  conn.sendto((data).encode(), address)
+                  (self.list).add(i)
+                  self.acks_sent = 1
          
                finally:
+                  time.sleep(1)
                   sock_server.close()
 
 total_process = 3
