@@ -41,15 +41,13 @@ class server(threading.Thread):
    def __init__(self, procID):
       threading.Thread.__init__(self)
       self.procID = procID
-      self.list = set([])
-      self.acks_sent = 0
+      self.list_msg = set([])
 
    def run(self):
       sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       sock.bind(('localhost', (2000+int(sys.argv[1]))))
       sock.listen(1)
       print("[PROCESSO - "+self.procID+"] ouvindo....")
-
       while True:
          conn, address = sock.accept()
          data = conn.recv(1024).decode()
@@ -58,6 +56,9 @@ class server(threading.Thread):
 
          if not y["ack"]:
             print("A mensagem chegou para mim no tempo: "+str(y["time"]))
+            self.list_msg.add(procID)
+            sorted(self.list_msg)
+            print(str(self.list_msg))
             for i in range(1, (total_process+1)):
                try:
                   sock_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -70,11 +71,16 @@ class server(threading.Thread):
                   }
                   print("ENVIEI ACK PARA O MEU SENHOR PROCESSO "+str(i))
                   sock_server.send(json.dumps(x).encode())
+                  
                except Exception as e:
                   print(e)
                   
-         elif y["ack"] == 1:
+         elif y["ack"] == 1 and procID in self.list_msg:
             print("Recebi ACK do Processo " + y["id"] + " no tempo: " + str(y["time"]))
+            
+      
+      if(len(self.list_ack) == total_process):
+            print("Enviado para aplicação de cima ^")
          
 
 total_process = 3
