@@ -4,6 +4,7 @@ import threading
 import time
 import socket
 import sys
+import json
 
 class client(threading.Thread):
    def __init__(self, procID):
@@ -17,12 +18,20 @@ class client(threading.Thread):
             sock.settimeout(0.2)
             server_address = ('localhost', 2000 + i)
             sock.connect(server_address)
-            sock.send(self.procID.encode())
-            try:
-               data, server = sock.recvfrom(64)
-               print("Recebi o ACK do Processo: ", str(data.decode()))
-            finally:
-               sock.close()
+            x = {
+               "msg": self.procID,
+               "ack": 0,
+               "time": (time.time() * 1000.0),
+               "id": self.procID
+            }
+            sock.send(json.dumps(x).encode())
+            
+           # try:
+           #    data, server = sock.recvfrom(64)
+           #    print(data)
+           #    print("Recebi o ACK do Processo: ", str(data.decode()))
+           # finally:
+           #    sock.close()
          except socket.timeout:
             print("TIME OUT!")
          finally:
@@ -43,25 +52,30 @@ class server(threading.Thread):
 
       while True:
          conn, address = sock.accept()
-         data = conn.recv(64).decode()
+         data = conn.recv(1024).decode()
 
-         print("Recebido mensagem do processo: " + str(data))
-         if self.acks_sent == 0:
+         y = json.loads(data)
+
+         if not y["ack"]:
+            print("A mensagem chegou para mim no tempo: "+str(y["time"]))
             for i in range(1, (total_process+1)):
                try:
                   sock_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                  server_address = ('localhost', 2000 + i)
+                  server_address = ('localhost', 2000+i)
                   sock_server.connect(server_address)
-                  sock_server.send(self.procID.encode())
+                  x = {
+                     "ack": 1,
+                     "time": (time.time() * 1000.0),
+                     "id": self.procID
+                  }
+                  print("ENVIEI ACK PARA O MEU SENHOR PROCESSO "+str(i))
+                  sock_server.send(json.dumps(x).encode())
+               except Exception as e:
+                  print(e)
                   
-                  print("Enviando ACK para processo: "+str(i))
-                  conn.sendto((data).encode(), address)
-                  (self.list).add(i)
-                  self.acks_sent = 1
+         elif y["ack"] == 1:
+            print("Recebi ACK do Processo " + y["id"] + " no tempo: " + str(y["time"]))
          
-               finally:
-                  time.sleep(1)
-                  sock_server.close()
 
 total_process = 3
 procID = sys.argv[1]
