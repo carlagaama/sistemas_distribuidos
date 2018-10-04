@@ -10,20 +10,22 @@ class client(threading.Thread):
    def __init__(self, procID):
       threading.Thread.__init__(self)
       self.procID = procID
-      self.lamp = procID
-      print("Meu clock é: "+(self.lamp)+"\n")
+      global lamp
+      print("Meu clock é: "+(lamp)+"\n")
 
    def run(self):
-      self.lamp = str(int(self.lamp) + 1)
-      print("Começou no tempo: "+self.lamp+self.procID)
+      global lamp
+
+      lamp = str(int(lamp) + 1)
+      print("Começou no tempo: "+lamp+self.procID)
 
       for i in range(1, (total_process+1)):
          try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(0.2)
-            server_address = ('localhost', 1000 + i)
+            server_address = ('localhost', 2000 + i)
             sock.connect(server_address)
-            time = i + int(self.lamp)
+            time = i + int(lamp)
             print("Enviei a mensagem no tempo: "+str(time)+self.procID)
             x = {
                "msg": self.procID,
@@ -32,6 +34,7 @@ class client(threading.Thread):
                "id": self.procID,
                "origem": self.procID
             }
+            lamp = str(time)
             sock.send(json.dumps(x).encode())
             
          except socket.timeout:
@@ -43,11 +46,11 @@ class server(threading.Thread):
    def __init__(self, procID):
       threading.Thread.__init__(self)
       self.procID = procID
-      self.lamp = '0'
       
    def run(self):
+      global lamp
       sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      sock.bind(('localhost', (1000+int(sys.argv[1]))))
+      sock.bind(('localhost', (2000+int(sys.argv[1]))))
       sock.listen(1)
       print("[PROCESSO - "+self.procID+"] ouvindo....")
       while True:
@@ -56,27 +59,31 @@ class server(threading.Thread):
 
          y = json.loads(data)
 
-         time = max(int(self.lamp), int(y["time"]))
+         time = max(int(lamp), int(y["time"]))
          time = time + 1
-         self.lamp = str(time)
+         lamp = str(time)
 
          if not y["ack"]:
-            print("\nA mensagem chegou para mim no tempo: "+str(self.lamp+self.procID))
+            print("\nA mensagem chegou para mim no tempo: "+str(lamp+self.procID))
             list_msg_recebida.add(self.procID)
             for i in range(1, (total_process+1)):
+               time = max(int(lamp), int(y["time"]))
+               time = time + 1
+               lamp = str(time)
+
                try:
                   sock_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                  server_address = ('localhost', 1000+i)
+                  server_address = ('localhost', 2000+i)
                   sock_server.connect(server_address)
-                  time = max(int(self.lamp), int(y["time"]))
-                  self.lamp = time + 1
+                  #time = max(int(lamp), int(y["time"]))
+                  lamp = str(int(lamp) + 1)
                   x = {
                      "ack": 1,
-                     "time": self.lamp,
+                     "time": lamp,
                      "id": self.procID,
                      "origem": y["origem"]
                   }
-                  print("Enviado ACK para o Processo "+str(i)+" no tempo: "+str(self.lamp)+self.procID)
+                  print("Enviado ACK para o Processo "+str(i)+" no tempo: "+str(lamp)+self.procID)
                   sock_server.send(json.dumps(x).encode())
                   list_msg_ack.add(i)
                except Exception as e:
@@ -84,7 +91,7 @@ class server(threading.Thread):
             print("\n")
                   
          elif y["ack"] == 1 and self.procID in list_msg_recebida:
-            print("Recebi ACK do Processo " + y["id"] + " no tempo: " + str(self.lamp)+self.procID)
+            print("Recebi ACK do Processo " + y["id"] + " no tempo: " + str(lamp)+self.procID)
             list_acks.add(y["id"])
 
          if(len(list_acks) == total_process and y["origem"] == self.procID):
