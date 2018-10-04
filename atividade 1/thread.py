@@ -22,7 +22,8 @@ class client(threading.Thread):
                "msg": self.procID,
                "ack": 0,
                "time": (time.time() * 1000.0),
-               "id": self.procID
+               "id": self.procID,
+               "origem": self.procID
             }
             sock.send(json.dumps(x).encode())
             
@@ -41,8 +42,7 @@ class server(threading.Thread):
    def __init__(self, procID):
       threading.Thread.__init__(self)
       self.procID = procID
-      self.list_msg = set([])
-
+      
    def run(self):
       sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       sock.bind(('localhost', (2000+int(sys.argv[1]))))
@@ -56,9 +56,8 @@ class server(threading.Thread):
 
          if not y["ack"]:
             print("A mensagem chegou para mim no tempo: "+str(y["time"]))
-            self.list_msg.add(procID)
-            sorted(self.list_msg)
-            print(str(self.list_msg))
+            list_msg_recebida.add(self.procID)
+            print(str(list_msg_recebida))
             for i in range(1, (total_process+1)):
                try:
                   sock_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -67,24 +66,35 @@ class server(threading.Thread):
                   x = {
                      "ack": 1,
                      "time": (time.time() * 1000.0),
-                     "id": self.procID
+                     "id": self.procID,
+                     "origem": y["origem"]
                   }
                   print("ENVIEI ACK PARA O MEU SENHOR PROCESSO "+str(i))
                   sock_server.send(json.dumps(x).encode())
+                  list_msg_ack.add(i)
+                  #print(list_msg)
+            
                   
                except Exception as e:
                   print(e)
                   
-         elif y["ack"] == 1 and procID in self.list_msg:
+         elif y["ack"] == 1 and self.procID in list_msg_recebida:
             print("Recebi ACK do Processo " + y["id"] + " no tempo: " + str(y["time"]))
-            
-      
-      if(len(self.list_ack) == total_process):
-            print("Enviado para aplicação de cima ^")
+            list_acks.add(y["id"])
+         #print(len(list_acks))
+         #print(list_msg)
+         
+         #print(len(list_acks))   
+         if(len(list_acks) == total_process and y["origem"] == self.procID):
+            print("\n\nEnviado para aplicação de cima ^")      
          
 
 total_process = 3
 procID = sys.argv[1]
+list_msg_ack = set([])
+list_msg_recebida = set([])
+list_acks = set([])
+
 
 op = client(procID)
 dp = server(procID)
