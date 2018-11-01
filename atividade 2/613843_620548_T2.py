@@ -13,12 +13,21 @@ import time
 id_processo = 0
 fila_requisicoes = list()
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[33m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 class EnviaRequisicao(threading.Thread):
     def __init__(self, id_processo):
         global lamp
         threading.Thread.__init__(self)
         self.pid = id_processo
-        self.querendo_usar_recurso = 1
 
     def run(self):
         global lamp
@@ -39,14 +48,14 @@ class EnviaRequisicao(threading.Thread):
                         "time": lamp
                     }
 
-                    print("Enviando requisicao para o processo "+str(i))
+                    print(bcolors.OKBLUE+"Enviando requisicao para o processo "+str(i)+bcolors.ENDC)
 
                     sock.send(json.dumps(mensagem).encode())
                 except socket.timeout:
                    print("We fucking dead, homie.")
                 finally:
                     sock.close()
-        print("\nEsperando OKs...")
+        print(bcolors.UNDERLINE+"\nEsperando OKs..."+bcolors.ENDC)
         return
 
 class RecebeRequisicao(threading.Thread):
@@ -54,8 +63,6 @@ class RecebeRequisicao(threading.Thread):
         global lamp
         threading.Thread.__init__(self)
         self.pid = id_processo
-        self.querendo_usar_recurso = 0
-        self.usando_recurso = 0
         self.ok_count = 0
 
     def run(self):
@@ -70,29 +77,25 @@ class RecebeRequisicao(threading.Thread):
 
             json_data = json.loads(mensagem)
 
-            #checa se o processo já está na fila de requisicoes
-            if json_data["sender"] in fila_requisicoes:
-                process_in_list = 1
-            else:
-                process_in_list = 0
-
             #se o processo estiver usando o recurso, adiciona na fila para enviar ok depois
-            if(usando_recurso == True and process_in_list == False and json_data["request"] == 1):
+            if(usando_recurso == True and json_data["request"] == 1):
                 fila_requisicoes.append(json_data["sender"])
-            elif(querendo_usar_recurso == True and process_in_list == False and json_data["request"] == 1):
+                print(bcolors.HEADER+bcolors.UNDERLINE+"Processo "+str(json_data["sender"])+" esperando na fila"+bcolors.ENDC)
+            elif(querendo_usar_recurso == True and json_data["request"] == 1):
+                #-------bater lamp
                 fila_requisicoes.append(json_data["sender"])
+                print(bcolors.HEADER+bcolors.UNDERLINE+"Processo "+str(json_data["sender"])+" esperando na fila"+bcolors.ENDC)
 
-            #checa se o processo quer usar o recurso ou não
+            #checa se o processo atual quer usar o recurso ou não
             if(json_data["request"] == 1 and json_data["sender"] == self.pid):
-                print("Quero usar o recurso!")
+                print(bcolors.OKGREEN+"Quero usar o recurso!"+bcolors.ENDC)
                 querendo_usar_recurso = 1
 
             #se a mensagem for ok e o destinatário for o processo que enviou o pedido de requisição, incrementa o self.ok_count
             if(json_data["ok"] == 1 and str(json_data["recipient"]) == self.pid):
-                print("Recebi OK do processo "+str(json_data["sender"]))
+                print(bcolors.WARNING+"Recebi OK do processo "+str(json_data["sender"])+bcolors.ENDC)
                 self.ok_count += 1
 
-                print(str(self.ok_count))
                 if(self.ok_count == 2):
                     #significa que recebeu ok de todo mundo, portanto pode consumir o recurso!
                     usando_recurso = 1
@@ -104,37 +107,34 @@ class RecebeRequisicao(threading.Thread):
             if(json_data["request"] == 1 and (querendo_usar_recurso == False) and (usando_recurso == False)):
                 enviaOks = EnviaOks(self.pid, int(json_data["sender"]))
                 enviaOks.start()
-            elif(json_data["request"] == 1 and (querendo_usar_recurso == True) and (usando_recurso == False)):
-                 print("Estou na fila de espera...")
-                 fila_requisicoes.append(self.pid)
 
 class Recurso(threading.Thread):
     def __init__(self, pid):
         threading.Thread.__init__(self)
-        self.timer = random.randrange(3, 7)
+        self.timer = random.randrange(4, 7)
         self.current_process = pid
 
     def run(self):
         global lock, fila_requisicoes, usando_recurso, querendo_usar_recurso
 
         lock.acquire()
-        print("\n--------------------------ENTREI NA REGIÃO CRÍTICA!--------------------------")
-        print("Vou segurar o recurso durante "+str(self.timer)+" segundos!")
+        print(bcolors.FAIL+"\n--------------------------ENTREI NA REGIÃO CRÍTICA!--------------------------"+bcolors.ENDC)
+        print(bcolors.FAIL+"Vou segurar o recurso durante "+str(self.timer)+" segundos!"+bcolors.ENDC)
         while(self.timer > 0):
-            print("\t\t\t\t\t"+str(self.timer))
+            print(bcolors.FAIL+"\t\t\t\t\t"+str(self.timer)+bcolors.ENDC)
             self.timer -= 1
             time.sleep(1)
         lock.release()
-        print("Recurso liberado!")
-        print("-----------------------------------------------------------------------------")
+        print(bcolors.FAIL+"Recurso liberado!"+bcolors.ENDC)
+        print(bcolors.FAIL+"-----------------------------------------------------------------------------"+bcolors.ENDC)
 
         usando_recurso = 0
         querendo_usar_recurso = 0
+        print("Fila:"+str(fila_requisicoes))
         while(len(fila_requisicoes) > 0):
             next_process = fila_requisicoes.pop(0)
             enviaOks = EnviaOks(self.current_process, int(next_process))
             enviaOks.start()
-
         return
 
 class EnviaOks(threading.Thread):
@@ -185,8 +185,9 @@ if __name__ == '__main__':
     recebeRequisicao = RecebeRequisicao(id_processo)
     recebeRequisicao.start()
 
+    print("Aperte ENTER para fazer uma requisição.")
     while True:
         enviaRequisicao = EnviaRequisicao(id_processo)
         input()
-        print("Enviando requisição...")
+        print(bcolors.OKBLUE+bcolors.UNDERLINE+"Enviando requisição..."+bcolors.ENDC)
         enviaRequisicao.start()
