@@ -58,11 +58,12 @@ class EscutaMensagens (threading.Thread):
         self.parent = -1
         self.messages_received = 0
         # these last attributes are for leader use only, by default, it supposes that itself is the winning node
+        self.returns_received = 0
         self.winning_node = self.pid
         self.winning_node_value = self.value
 
     def run(self):
-        global total_neighbours
+        global total_neighbours, leader
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('localhost', (6660+int(self.pid))))
         sock.listen(1)
@@ -75,14 +76,21 @@ class EscutaMensagens (threading.Thread):
 
             json_mensagem = json.loads(mensagem)
 
-            # if it got a connection, regardless of the message, count that into total_neighbours
-            self.messages_received+=1
+            # if it accepted a connection, adds if it's not a ack message
+            if json_mensagem["ack"] != 1:
+                self.messages_received+=1
+                
+            # leader variable...
+            if json_mensagem["return"] == 1:
+                self.returns_received+=1
 
             # see what's the message all about
-            if json_mensagem["election"] == 1:
+            if json_mensagem["election"] == 1 and self.messages_received != total_neighbours:
                 # i need a father!
-                if self.parent != -1:
+                if self.parent == -1 and leader == 0:
                     self.parent = json_mensagem["sender"]
+
+                    print("\nMeu pai agora é o nó: "+str(json_mensagem["sender"]+"\n"))
 
                     # send to all neighbours
                     repassaEleicao = RepassaEleicao(self.pid, json_mensagem["sender"])
@@ -92,32 +100,35 @@ class EscutaMensagens (threading.Thread):
                     sendAck = SendAck(json_mensagem["sender"], self.pid)
                     sendAck.start()
             # if someone sent me their value
-            elif json_mensagem["result"] == 1:
+            elif json_mensagem["return"] == 1:
+
+                print("Recebi o valor: "+str(json_mensagem["value"])+" do nó "+str(json_mensagem["sender"]))
+                
                 # if my child value is greater than my value, then send child value
                 if json_mensagem["value"] > self.value:
                     # if i'm not the leader, then send it to my parent
-                    if self.leader == 0:
+                    if leader == 0:
                         # TODO na hora de printar vai dar bosta pq to mandando o pid do filho ao inves do no atual, consertar depois
                         sendParent = SendParent(self.parent, json_mensagem["sender"], json_mensagem["value"])
                         sendParent.start()
                     # otherwise, i'll just update and wait for all connections to be made
-                    else:
+                    elif leader == 1:
                         self.winning_node = json_mensagem["sender"]
                         self.winning_node_value = json_mensagem["value"]
-                else:
+                elif leader == 0:
                     sendParent = SendParent(self.parent, self.parent, self.value)
                     sendParent.start()
             elif json_mensagem["ack"] == 1:
                 print("Eu recebi um ACK do Node "+json_mensagem["sender"])
             # if i'm the last node, then send value to parent
-            elif self.messages_received == total_neighbours:
+            elif self.messages_received == total_neighbours and leader == 0:
                 sendParent = SendParent(self.parent, self.pid, self.value)
                 sendParent.start()
 
             # if i'm the leader and just received all messages from my child, then broadcast that shit
-            if self.messages_received == total_neighbours and self.leader == 1:
+            if self.returns_received == total_neighbours and leader == 1:
                 # TODO send the new leader to the rest of the nodes.
-                print("aaa")
+                print("O nó líder agora é: "+str(self.winning_node)+", com valor: "+str(self.winning_node_value))
 
 
 class RepassaEleicao(threading.Thread):
@@ -128,7 +139,7 @@ class RepassaEleicao(threading.Thread):
 
     def run(self):
         for i in lista_vizinhos:
-            if i != self.sender:
+            if i != int(self.sender):                
                 try:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     sock.settimeout(0.2)
@@ -143,7 +154,7 @@ class RepassaEleicao(threading.Thread):
                         "ack": 0,
                     }
 
-                    print("Estou enviando eleicao para o meu vizinho Node "+str(i))
+                    print("Estou enviando eleicao para o meu vizinho nó "+str(i))
                     sock.send(json.dumps(mensagem).encode())
                 except socket.timeout:
                     print("Where the fuck are you")
@@ -173,7 +184,7 @@ class SendParent(threading.Thread):
                 "ack": 0
             }
 
-            print("Enviando resultado para o Node "+self.parent)
+            print("Enviando valor "+str(self.value)+" para o Node "+self.parent)
             sock.send(json.dumps(mensagem).encode())
         except socket.timeout:
             print("Who at?")
@@ -254,6 +265,7 @@ if __name__ == '__main__':
         leader = 1
     else:
         leader = 0
+        
     # we need to initialize who are the neighbours of each node
     inicializa_nos(id_processo)
 
