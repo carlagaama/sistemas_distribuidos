@@ -23,7 +23,7 @@ class ComecaEleicao(threading.Thread):
     def run(self):
         if self.leader == 1:
 
-            print("Sou o líder, portanto vou começar a eleição.")
+            print("[COMEÇANDO ELEIÇÃO]")
 
             for i in lista_vizinhos:
                 try:
@@ -40,7 +40,7 @@ class ComecaEleicao(threading.Thread):
                         "ack": 0,
                     }
 
-                    print("Estou enviando eleicao para o meu vizinho Node "+str(i))
+                    print("[ENVIADO ELEIÇÃO] para o processo "+str(i))
                     sock.send(json.dumps(mensagem).encode())
                 except socket.timeout:
                     print("Where the fuck are you")
@@ -61,12 +61,14 @@ class EscutaMensagens (threading.Thread):
         self.returns_received = 0
         self.winning_node = self.pid
         self.winning_node_value = self.value
+        # test
+        self.bo = 0
 
     def run(self):
         global total_neighbours, leader
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('localhost', (6660+int(self.pid))))
-        sock.listen(1)
+        sock.listen(2)
 
         print("Minha porta é: "+str(6660+int(self.pid)))
 
@@ -80,17 +82,17 @@ class EscutaMensagens (threading.Thread):
             if json_mensagem["ack"] != 1:
                 self.messages_received+=1
                 
-            # leader variable...
+            # leader variable
             if json_mensagem["return"] == 1:
                 self.returns_received+=1
 
-            # see what's the message all about
-            if json_mensagem["election"] == 1 and self.messages_received != total_neighbours:
+            # see what's the message is all about
+            if json_mensagem["election"] == 1:
                 # i need a father!
                 if self.parent == -1 and leader == 0:
                     self.parent = json_mensagem["sender"]
 
-                    print("\nMeu pai agora é o nó: "+str(json_mensagem["sender"]+"\n"))
+                    print("\n[ENCONTRADO PAI] processo: "+str(json_mensagem["sender"])+"\n")
 
                     # send to all neighbours
                     repassaEleicao = RepassaEleicao(self.pid, json_mensagem["sender"])
@@ -102,7 +104,7 @@ class EscutaMensagens (threading.Thread):
             # if someone sent me their value
             elif json_mensagem["return"] == 1:
 
-                print("Recebi o valor: "+str(json_mensagem["value"])+" do nó "+str(json_mensagem["sender"]))
+                print("[RECEBIDO VALOR] "+str(json_mensagem["value"])+" do nó "+str(json_mensagem["sender"]))
                 
                 # if my child value is greater than my value, then send child value
                 if json_mensagem["value"] > self.value:
@@ -111,6 +113,7 @@ class EscutaMensagens (threading.Thread):
                         # TODO na hora de printar vai dar bosta pq to mandando o pid do filho ao inves do no atual, consertar depois
                         sendParent = SendParent(self.parent, json_mensagem["sender"], json_mensagem["value"])
                         sendParent.start()
+                        self.bo = 1
                     # otherwise, i'll just update and wait for all connections to be made
                     elif leader == 1:
                         self.winning_node = json_mensagem["sender"]
@@ -118,17 +121,20 @@ class EscutaMensagens (threading.Thread):
                 elif leader == 0:
                     sendParent = SendParent(self.parent, self.parent, self.value)
                     sendParent.start()
+                    self.bo = 1
             elif json_mensagem["ack"] == 1:
-                print("Eu recebi um ACK do Node "+json_mensagem["sender"])
+                print("[RECEBIDO ACK] do processo "+json_mensagem["sender"])
+                
             # if i'm the last node, then send value to parent
-            elif self.messages_received == total_neighbours and leader == 0:
+            if self.messages_received == total_neighbours and leader == 0 and self.bo == 0:
                 sendParent = SendParent(self.parent, self.pid, self.value)
                 sendParent.start()
+                self.bo = 1
 
             # if i'm the leader and just received all messages from my child, then broadcast that shit
             if self.returns_received == total_neighbours and leader == 1:
                 # TODO send the new leader to the rest of the nodes.
-                print("O nó líder agora é: "+str(self.winning_node)+", com valor: "+str(self.winning_node_value))
+                print("[NOVO LÍDER] processo: "+str(self.winning_node)+", com valor: "+str(self.winning_node_value))
 
 
 class RepassaEleicao(threading.Thread):
@@ -154,7 +160,7 @@ class RepassaEleicao(threading.Thread):
                         "ack": 0,
                     }
 
-                    print("Estou enviando eleicao para o meu vizinho nó "+str(i))
+                    print("[ENVIADO ELEIÇÃO] para o processo "+str(i))
                     sock.send(json.dumps(mensagem).encode())
                 except socket.timeout:
                     print("Where the fuck are you")
@@ -184,7 +190,7 @@ class SendParent(threading.Thread):
                 "ack": 0
             }
 
-            print("Enviando valor "+str(self.value)+" para o Node "+self.parent)
+            print("[ENVIADO VALOR] "+str(self.value)+" para o processo "+self.parent)
             sock.send(json.dumps(mensagem).encode())
         except socket.timeout:
             print("Who at?")
@@ -213,7 +219,7 @@ class SendAck(threading.Thread):
                 "ack": 1
             }
 
-            print("Enviando ACK para o Node "+self.recipient)
+            print("[ENVIADO ACK] para o processo "+self.recipient)
             sock.send(json.dumps(mensagem).encode())
         except socket.timeout:
             print("Who at?")
