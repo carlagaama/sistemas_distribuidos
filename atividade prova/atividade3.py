@@ -98,7 +98,7 @@ class EscutaMensagens (threading.Thread):
                 print(bcolors.UNDERLINE+"[RECEBIDO VALOR] "+str(json_mensagem["value"])+" do nó "+str(json_mensagem["sender"])+bcolors.ENDC)
                 
                 # if my child value is greater than my value, then send child value
-                if json_mensagem["value"] > self.value:
+                if int(json_mensagem["value"]) > int(self.winning_node_value):
                     # if i'm not the leader, then send it to my parent
                     if leader == 0:
                         # TODO na hora de printar vai dar bosta pq to mandando o pid do filho ao inves do no atual, consertar depois
