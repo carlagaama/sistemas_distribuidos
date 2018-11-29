@@ -308,10 +308,31 @@ def inicializa_nos(id_processo):
         lista_vizinhos.append(3)
         lista_vizinhos.append(5)
         total_neighbours = 3
-    else:
+    elif int(id_processo) == 5:
         lista_vizinhos.append(2)
         lista_vizinhos.append(3)
         lista_vizinhos.append(4)
+        total_neighbours = 3
+    elif int(id_processo) == 6:
+        lista_vizinhos.append(8)
+        lista_vizinhos.append(9)
+        lista_vizinhos.append(10)
+        total_neighbours = 3
+    elif int(id_processo) == 7:
+        lista_vizinhos.append(5)
+        lista_vizinhos.append(10)
+        total_neighbours = 2
+    elif int(id_processo) == 8:
+        lista_vizinhos.append(6)
+        total_neighbours = 1
+    elif int(id_processo) == 9:
+        lista_vizinhos.append(6)
+        lista_vizinhos.append(10)
+        total_neighbours = 2
+    else:
+        lista_vizinhos.append(6)
+        lista_vizinhos.append(7)
+        lista_vizinhos.append(9)
         total_neighbours = 3
 
 
