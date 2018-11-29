@@ -75,6 +75,9 @@ class EscutaMensagens (threading.Thread):
             if json_mensagem["return"] == 1:
                 self.returns_received+=1
 
+            if json_mensagem["return"] == 1 or json_mensagem["ack"] == 1:
+                self.messages_received+=1
+
             # see what's the message is all about
             if json_mensagem["election"] == 1:
                 self.le = 0
@@ -96,11 +99,11 @@ class EscutaMensagens (threading.Thread):
             elif json_mensagem["return"] == 1:
                 
                 print(bcolors.UNDERLINE+"[RECEBIDO VALOR] "+str(json_mensagem["value"])+" do nó "+str(json_mensagem["sender"])+bcolors.ENDC)
-                
+
                 # if my child value is greater than my value, then send child value
                 if int(json_mensagem["value"]) > int(self.winning_node_value):
                     # if i'm not the leader, then send it to my parent
-                    if leader == 0:
+                    if leader == 0 and self.messages_received == total_neighbours-1:
                         # TODO na hora de printar vai dar bosta pq to mandando o pid do filho ao inves do no atual, consertar depois
                         sendParent = SendParent(self.parent, json_mensagem["sender"], json_mensagem["value"])
                         sendParent.start()
@@ -110,14 +113,13 @@ class EscutaMensagens (threading.Thread):
                         self.winning_node = json_mensagem["sender"]
                         self.winning_node_value = json_mensagem["value"]
                 # if i'm not the leader, then send my value instead
-                elif leader == 0:
-                    sendParent = SendParent(self.parent, self.parent, self.value)
+                elif leader == 0 and self.bo == 0 and self.messages_received == total_neighbours-1:
+                    sendParent = SendParent(self.parent, self.pid, self.value)
                     sendParent.start()
                     self.bo = 1
             # if i received an ACK, print
             elif json_mensagem["ack"] == 1:
                 print(bcolors.WARNING+"[RECEBIDO ACK] do processo "+json_mensagem["sender"]+bcolors.ENDC)
-                self.messages_received+=1
             # if it's a new leader message
             elif json_mensagem["new leader"][0] == 1:
                 # reset all attributes
