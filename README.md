@@ -1,6 +1,6 @@
 # Sistemas Distribuídos
 
-Este repositório tem por fim armazenar os códigos das atividades da aula de Sistemas Distribuídos.
+Este repositório tem por fim armazenar os códigos das atividades da aula de Sistemas Distribuídos realizadas durante o período letivo de 2018/2.
 
 ## Começando
 ### Pré-requisitos
@@ -27,7 +27,7 @@ Pronto! Agora, abra o Terminal e vá até a pasta clonada, usando o comando ```c
 cd ~/Desktop/Sistemas_Distribuidos
 ```
 
-Na pasta correta, agora podemos rodar os programas!
+Agora basta entrar na pasta que foi selecionada 
 
 ## Rodando os programas
 
@@ -46,6 +46,8 @@ Tratando-se de programas focados em Sistemas Distribuídos, isso significa que p
 
 * [IDLE](https://www.python.org/downloads/) - A IDE que vem embutida com o Python
 * [PyCharm](https://www.jetbrains.com/pycharm/) - IDE da Intellij para programação em Python
+* [Python 3](https://www.python.org/download/releases/3.0/) - Python 3
+* [Google Cloud](https://cloud.google.com/) - Google Cloud Platform, para o último trabalho
 
 ## Contribuindo
 
@@ -62,4 +64,8 @@ Este projeto é licenciado sob a licença MIT - veja o arquivo [LICENSE.md](LICE
 
 ## Reconhecimentos
 
-* Não sei o que colocar aqui
+Somos eternamente gratos pela ajuda de todos que nos inspiraram e nos mostraram a direção para o desenvolvimento de algumas partes dos projetos. Faça questão de conferir outros trabalhos feitos por eles:
+
+* [**Mateus S. Vasconcelos**](https://github.com/mattvasc)
+* [**Giovanna Blasco**](https://github.com/gioblasco)
+* [**Matheus Jesus**](https://github.com/matheusjesus)
