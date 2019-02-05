@@ -3,8 +3,6 @@
 # Carla Simoes Gama     -     613843
 # Daniel Bertoldi       -     620548
 
-#adicionar id na msg
-
 import threading
 import time
 import socket
@@ -79,7 +77,6 @@ class server(threading.Thread):
                   sock_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                   server_address = ('localhost', 2000+i)
                   sock_server.connect(server_address)
-                  #time = max(int(id_mensagem), int(y["time"]))
                   id_mensagem = str(int(id_mensagem) + 1)
                   x = {
                      "ack": 1,
@@ -101,7 +98,7 @@ class server(threading.Thread):
          if(len(lista_acks_recebidos) == total_process and y["origem"] == self.id_processo):
             print("\nEnviado para aplicação de cima ^")      
          
-
+# Troque o número desta variável para a quantidade de terminais que você irá abrir
 total_process = 3
 id_processo = sys.argv[1]
 id_mensagem = sys.argv[1]
