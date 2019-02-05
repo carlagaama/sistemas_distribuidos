@@ -314,7 +314,8 @@ def inicializa_nos(id_processo):
         lista_vizinhos.append(2)
         lista_vizinhos.append(3)
         lista_vizinhos.append(4)
-        total_neighbours = 3
+        lista_vizinhos.append(7)
+        total_neighbours = 4
     elif int(id_processo) == 6:
         lista_vizinhos.append(8)
         lista_vizinhos.append(9)
