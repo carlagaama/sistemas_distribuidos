@@ -40,7 +40,7 @@ python3 613843_620548_T2.py
 
 ### E agora?
 
-Tratando-se de programas focados em Sistemas Distribuídos, isso significa que para todas as atividades você irá precisar abrir diversos terminais para poder testá-los de forma correta. Cada arquivo ```.py``` contém um breve manual de instruções que diz como utilizar o programa e o que ele faz, então faça questão de ler o manual da atividade de seu interesse antes de rodar o programa.
+Tratando-se de programas focados em Sistemas Distribuídos, isso significa que para todas as atividades você irá precisar abrir diversos terminais para poder testá-los de forma correta. A pasta de cada atividade contém um breve manual de instruções que diz como utilizar o programa e o que ele faz, então faça questão de ler o manual da atividade de seu interesse antes de rodar o programa.
 
 ## Feito com
 
