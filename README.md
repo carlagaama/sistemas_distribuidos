@@ -69,3 +69,4 @@ Somos eternamente gratos pela ajuda de todos que nos inspiraram e nos mostraram 
 * [**Mateus S. Vasconcelos**](https://github.com/mattvasc)
 * [**Giovanna Blasco**](https://github.com/gioblasco)
 * [**Matheus Jesus**](https://github.com/matheusjesus)
+* [**Antônio Medeiros**](https://github.com/ajmedeiros)
