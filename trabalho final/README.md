@@ -1,6 +1,46 @@
 # Cloud Broker
 
-Leia o PDF da [descrição do projeto](https://github.com/carlagaama/sistemas_distribuidos/blob/master/atividade%20prova/descricao.pdf) para maiores informações.
+Leia o PDF da [descrição do projeto](https://github.com/carlagaama/sistemas_distribuidos/blob/master/trabalho%20final/descricao.pdf) para maiores informações.
+
+## Começando
+### Pré-requisitos
+
+Da forma como arquitetamos e desenvolvemos este projeto, você **deverá** ter uma máquina virtual ativa em algum provedor de computação em nuvem, como o [GCP](https://cloud.google.com/) ou a [AWS](https://aws.amazon.com/), ou qualquer outra de sua escolha. Nós optamos por usar o GCP, por sua simplicidade.
+
+Sua VM deverá ter um banco de dados ```NoSQL``` localmente, que irá armazenar as informações de todas as VMs, e uma API que deverá receber requisições e retornar resultados para o cliente. Para o banco, escolhemos utilizar o [MongoDB](https://www.mongodb.com/), simples e fácil de aprender, e para a API utilizamos [Flask-RESTful](https://flask-restful.readthedocs.io/en/latest/), que abstrai e simplifica toda a lógica por debaixo de ouvir e responder por chamadas ```HTTP```.
+
+## Configurando sua VM pelo GCP
+### Criando sua instância de VM
+
+  1. Após logar no GCP e criar um projeto, abra o menu de navegação e navegue até *Compute Engine* > *Instâncias de VMs* e ative o faturamento, caso necessite.
+  2. Clique em ```Criar```, dê um nome a sua VM e escolha a região ```southamerica-east1```, com a zona de sua preferência.
+  3. Como se trata de um trabalho simples, escolha as opções mais básicas, então selecione ```Personalizar``` e selecione apenas 1 núcleo de CPU compartilhado, com ```0,6 GB``` de memória.
+  4. Na opção de ```Disco de Inicialização```, nós optamos por rodar ```Ubuntu 18.04 LTS```, com ```15 GB``` de espaço de disco.
+  5. Em ```Conta de Serviço```, selecione *Nenhuma conta de serviço*.
+  6. **IMPORTANTE:** verifique que você permitiu o tráfego ```HTTP/HTTPS``` na seção ```Firewall```, caso contrário a API não irá funcionar!
+
+Se você não errou em nenhum passo até agora, você deve estar vendo algo parecido com isso na sua tela:
+
+<print1_2>
+
+Pronto! Você acabou de criar uma VM no Google Cloud! Vá tomar um café, você merece. :)
+
+### Inicialização inicial da VM
+
+  1. No canto superior direito, clique na seta ao lado do *SSH*, na categoria ```Conectar```, e selecione *Visualizar comando gcloud*.
+  2. Na tela que abrirá, clique no botão *Executar no Cloud Shell*. Começará o processo de inialização da sua VM. Você verá uma tela desta forma:
+
+<print_gcloud_shell>
+
+  3. Pressione ```ENTER```. Após os metadados SSH do projeto terem sido atualizados, use o comando ```gcloud init```.
+  4. Após aceitar o pedido de login, clique no link que será gerado, selecione sua conta do GCP, copie o código e cole no Google Cloud Shell.
+  5. Digite o número correspondente ao seu projeto.
+  6. Não é necessário configurar uma ```Zona``` e ```Região``` padrão, mas caso queira, saiba mais sobre as diferenças de cada [clicando neste link](https://cloud.google.com/compute/docs/regions-zones/).
+  7. Se tudo deu certo, suba um pouco a tela do Google Cloud Shell e você verá as seguintes mensagens:
+  
+<print3_sucess>
+
+Agora sim sua VM poderá fazer downloads dos arquivos que você irá armazenar em um ```bucket``` (calma, explicaremos esta parte mais para a frente!). Agora você pode conectar na sua VM usando a opção *SSH* diretamente, e **lembre de rodar os comandos ```sudo apt-get update``` e ```sudo apt-get upgrade``` assim que a conexão for estabelecida!**
 
 ## Rodando o programa
 
