@@ -9,6 +9,8 @@ Da forma como arquitetamos e desenvolvemos este projeto, você **deverá** ter u
 
 Sua VM deverá ter um banco de dados ```NoSQL``` localmente, que irá armazenar as informações de todas as VMs, e uma API que deverá receber requisições e retornar resultados para o cliente. Para o banco, escolhemos utilizar o [MongoDB](https://www.mongodb.com/), simples e fácil de aprender, e para a API utilizamos [Flask-RESTful](https://flask-restful.readthedocs.io/en/latest/), que abstrai e simplifica toda a lógica por debaixo de ouvir e responder por chamadas ```HTTP```.
 
+**OPCIONAL:** para testar a API, utilizamos o [Postman](https://www.getpostman.com/), que facilita a leitura dos *JSONs* que serão enviados e recebidos, tornando-os mais legíveis.
+
 ## Configurando sua VM pelo GCP
 ### Criando sua instância de VM
 
@@ -21,7 +23,7 @@ Sua VM deverá ter um banco de dados ```NoSQL``` localmente, que irá armazenar 
 
 Se você não errou em nenhum passo até agora, você deve estar vendo algo parecido com isso na sua tela:
 
-<print1_2>
+![print1](https://github.com/carlagaama/sistemas_distribuidos/blob/master/trabalho%20final/media/print1.png)
 
 Pronto! Você acabou de criar uma VM no Google Cloud! Vá tomar um café, você merece. :)
 
@@ -30,7 +32,7 @@ Pronto! Você acabou de criar uma VM no Google Cloud! Vá tomar um café, você 
   1. No canto superior direito, clique na seta ao lado do *SSH*, na categoria ```Conectar```, e selecione *Visualizar comando gcloud*.
   2. Na tela que abrirá, clique no botão *Executar no Cloud Shell*. Começará o processo de inialização da sua VM. Você verá uma tela desta forma:
 
-<print_gcloud_shell>
+![Google Cloud Shell](https://github.com/carlagaama/sistemas_distribuidos/blob/master/trabalho%20final/media/print2.png)
 
   3. Pressione ```ENTER```. Após os metadados SSH do projeto terem sido atualizados, use o comando ```gcloud init```.
   4. Após aceitar o pedido de login, clique no link que será gerado, selecione sua conta do GCP, copie o código e cole no Google Cloud Shell.
@@ -38,7 +40,7 @@ Pronto! Você acabou de criar uma VM no Google Cloud! Vá tomar um café, você 
   6. Não é necessário configurar uma ```Zona``` e ```Região``` padrão, mas caso queira, saiba mais sobre as diferenças de cada [clicando neste link](https://cloud.google.com/compute/docs/regions-zones/).
   7. Se tudo deu certo, suba um pouco a tela do Google Cloud Shell e você verá as seguintes mensagens:
   
-<print3_sucess>
+![config success](https://github.com/carlagaama/sistemas_distribuidos/blob/master/trabalho%20final/media/print3.png)
 
 Agora sim sua VM poderá fazer downloads dos arquivos que você irá armazenar em um ```bucket``` (calma, explicaremos esta parte mais para a frente!). Agora você pode conectar na sua VM usando a opção *SSH* diretamente, e **lembre de rodar os comandos ```sudo apt-get update``` e ```sudo apt-get upgrade``` assim que a conexão for estabelecida!**
 
@@ -57,7 +59,7 @@ No *Console* do GCP, abra o *Menu de Navegação* e selecione *Storage*. Você t
   1. Selecione a opção ```Enviar arquivos``` e selecione o arquivo ```api.py``` para ser enviado.
   2. Pronto, seu arquivo foi adicionado no ```bucket```. É literalmente só isso mesmo.
   
- <print4_1>
+ ![arquivo adicionado](https://github.com/carlagaama/sistemas_distribuidos/blob/master/trabalho%20final/media/print4.png)
 
 #### Baixando arquivos do bucket na VM
 
@@ -65,7 +67,7 @@ No *Console* do GCP, abra o *Menu de Navegação* e selecione *Storage*. Você t
   2. Rode o comando: ```gsutil cp gs://<nome_do_seu_bucket>/<nome_do_arquivo> .```.
   3. Tcharam! Sua VM acabou de baixar o arquivo do bucket!
   
-  <print5_1>
+  ![arquivo baixado](https://github.com/carlagaama/sistemas_distribuidos/blob/master/trabalho%20final/media/print5.png)
   
 ### Criando um IP externo para sua VM
 
@@ -78,7 +80,7 @@ Como você já deve ter percebido durante sua estadia no menu de *Instâncias de
   5. **Importante:** na seção ```Anexado a```, selecione o nome do seu projeto.
   6. Clique em ```Reservar```.
   
- <print6_1>
+ ![ip externo criado](https://github.com/carlagaama/sistemas_distribuidos/blob/master/trabalho%20final/media/print6.png)
  
 ### Adicionando regra de firewall
 
@@ -95,7 +97,7 @@ Caso você já tenha dado uma olhada no código ```cliente.py``` ou seja familia
   6. Em ```Portas e protocolos``` > ```Protocolos e portas especificados```, selecione ```tcp```e digite o valor da porta da API. Lembrando que este valor **tem** que ser maior que 1024.
   7. Clique em ```Criar```.
   
- <print7_1>
+ ![regra firewall criada](https://github.com/carlagaama/sistemas_distribuidos/blob/master/trabalho%20final/media/print7.png)
  
   8. Volte na página *Instâncias de VMs*, clique no nome da sua VM, depois na opção *Editar*.
   9. Encontre o campo ```Tags de rede``` e digite o nome da tag da regra de firewall que você criou no passo 4.
@@ -117,7 +119,7 @@ Respira, vai dar tudo certo, ok? Conecte com sua máquina via *SSH*, faz uma pre
 Espere a instalação acabar e **bang!**, sua VM agora tem ```MongoDB```! Agora temos que iniciá-lo, criar um *banco de dados* e uma *coleção*. Bora lá:
 
   1. Rode o comando ```sudo service mongod start```.
-  2. Caso queira ter certeza de que tudo está funcional, dê um ```sudo less /var/log/mongodb/mongod.log``` e procure uma linha escrita *[initandlisten] waiting for connections on port 27017*. 27017 é a porta padrão que o ```MongoDB```usa. Se tudo estiver correto, prossiga.
+  2. Caso queira ter certeza de que tudo está funcional, dê um ```sudo less /var/log/mongodb/mongod.log``` e procure uma linha escrita *```[initandlisten] waiting for connections on port 27017```*. 27017 é a porta padrão que o ```MongoDB```usa. Se tudo estiver correto, prossiga.
   3. O Mongo só cria um *bd* e uma *coleção* quando há pelo menos um documento neles. Há duas formas de prosseguir daqui:
   
       3.1. Caso você tenha um arquivo *.json* do Mongo pronto para ser importado, basta usar o comando ```mongo import --db <nome_db> --collection <nome_colecao> --file <nome_do_arquivo_.json>```.
@@ -129,49 +131,162 @@ Lembrando que fica mais fácil se você montar o seu banco de dados localmente, 
 FINALMENTE, tudo está pronto para funcionar! Não foi tão difícil, não é? :)
 
 ## Rodando o programa
+### Usando o Postman
 
-Você deverá abrir 10 processos rodando o programa ```atividade3.py```, seja via terminal ou pela IDE que estiver utilizando, seguido de um número, que será o ```id``` do processo, e outro número que será o ```valor``` do mesmo. Caso você queira iniciar um processo como líder, basta acrescentar um quarto argumento, com valor 1. Somente o líder pode começar uma eleição, então faça questão de ter um líder ativo na sua topologia.
+Caso opte por usar o ```Postman``` (altamente recomendado) para testar apenas as chamadas e troca de mensagens, então há 3 rotas que deverão ser testadas:
 
-Inicializar o processo da forma:
+* **Rota /buy/**
 
-```
-python3 atividade3.py 1 1
-```
+  O endereço no qual será enviado o *JSON* é: ```http://<ip_externo_da_vm>:<porta_da_api>/buy/```
 
-Irá criar o processo 1, com valor 1.
+  O *JSON* que será lido nesta rota deverá ter a seguinte estrutura:
+  
+  ```
+    {
+      "qtd_vms": 2,
+      "specs": {
+    	  "cpu": 3,
+    	  "ram": "8GB",
+    	  "dsk": "500GB"
+      }
+    }
+  ```
+  
+  Note que os campos ```"qtd_vms"``` e ```"cpu"``` carregam um inteiro, enquanto os campos ```"ram``` e ```"dsk"``` contém uma string, com *GB* escrito no final. Sem o *GB* a API irá acusar que não existe VMs no *banco de dados* com as especificações.
+  
+  Caso a requisição tenha sucesso, o *JSON* que será retornado terá a seguinte estrutura:
 
-Já inicializar um processo da forma:
+  ```
+    {
+      "data": {
+          "vmsreturned": [
+              {
+                  "objectid": "5c4d8392abb6940577873cc6",
+                  "provider": 4,
+                  "vm_specs": {
+                      "price": 0.043,
+                      "qtd_cpu": 3,
+                      "qtd_dsk": "500GB",
+                      "qtd_ram": "8GB",
+                      "using": 1,
+                      "vm_name": "vm_4_001"
+                  }
+              },
+              {
+                  "objectid": "5c4f08fb0f37159765456bc0",
+                  "provider": 8,
+                  "vm_specs": {
+                      "price": 0.184,
+                      "qtd_cpu": 3,
+                      "qtd_dsk": "500GB",
+                      "qtd_ram": "8GB",
+                      "using": 1,
+                      "vm_name": "vm_8_002"
+                  }
+              }
+          ]
+      },
+      "success": true
+    }
+  ```
+  Caso o cliente peça mais VMs do que existem no*banco de dados*, o *JSON* retornado é:
+  
+  ```
+    {
+      "data": {
+          "vmsreturned": [
+              {
+                  "objectid": "5c4d82feabb6940577873cc2",
+                  "provider": 1,
+                  "vm_specs": {
+                      "price": 0.523,
+                      "qtd_cpu": 3,
+                      "qtd_dsk": "500GB",
+                      "qtd_ram": "8GB",
+                      "using": 1,
+                      "vm_name": "vm_1_001"
+                  }
+              }
+          ]
+      },
+      "msg": "Existem apenas 1 MVs com a especificação requisitada",
+      "success": true
+    }
+  ```
+  
+  Em caso de falha, o *JSON* retornado será:
 
-```
-python3 atividade3.py 4 20 1
-```
+  ```
+    {
+      "error": "Não existem MVs com estas especificações",
+      "success": false
+    }
+  ```
+  
+  Com esta informação você pode alterar a forma como o *JSON* é lido do lado do cliente da forma que bem entender. Assim que o cliente faz a requisição e é encontrado uma VM, o *banco de dados* atualiza o campo ```using``` para 1, buscas posteriores com as mesmas requisições não serão retornadas tais VMs.
+  
+  * **Rota /add/**
+  
+    O endereço no qual será enviado o *JSON* é: ```http://<ip_externo_da_vm>:<porta_da_api>/add/```
+  
+  Esta rota é utilizada para adicionar uma VM no *banco de dados*, portanto o *JSON* deve conter todas as informações da VM. Exemplo:
+  
+  ```
+    {
+      "provider": 5,
+      "vm_specs": {
+          "vm_name": "vm_5_001",
+          "qtd_cpu": 3,
+          "qtd_ram": "8GB",
+          "qtd_dsk": "300GB",
+          "price": 0.054,
+          "using": 0
+      }
+    }
+  ```
+  
+  O *JSON* de sucesso retorna o ```id``` da VM que foi inserida no *banco de dados*:
+  
+  ```
+    {
+        "success": true,
+        "vm_id": "5c5b4715b443262bdc70fe9c"
+    }
+  ```
+  
+  * **Rota /release/**
 
-Irá criar o processo 4, com valor 20 e que é o líder.
+  O endereço no qual será enviado o *JSON* é: ```http://<ip_externo_da_vm>:<porta_da_api>/release/```
+  
+  Como o próprio nome diz, é por meio desta rota que o cliente libera a VM. O *JSON* é simples, apenas o ```id``` da VM que está sendo liberada é enviada para a API, que atualiza o campo ```using``` da VM para 0, podendo ser retornada em outras buscas.
+  
+  ```
+    {
+        "objid": "5c4d82feabb6940577873cc2"
+    }
+  ```
+  
+  O retorno é tão simples quanto a mensagem enviada:
+  
+  ```
+    {
+      "success": true
+    }
+  ```
+  
+### Usando o código client-side.py
 
-Assim que cada processo estiver com a mensagem:
+Apenas digite o número da operação que você quer realizar e digite o que o programa lhe pedir. **Lembrando** que quando o programa te pedir a quantidade de RAM e disco, certifique-se de acrescentar ```GB``` no final, colado ao número.
 
-```
-Minha porta é: X
-```
-
-E o líder estiver sido inicializado, com a seguinte mensagem sendo mostrada na tela:
-
-```
-Pressione ENTER para começar a eleição.
-```
-
-Você está pronto para começar. Basta pressionar ```Enter``` no processo líder e ver como o novo líder é encontrado, com base na sua topologia.
-
-**OBSERVAÇÕES:**
-* A topologia que adotamos é a seguinte:
-
-![topologia](https://github.com/carlagaama/sistemas_distribuidos/blob/master/atividade%20prova/topologia.PNG)
-
-Se você quiser mudar esta topologia, terá que alterar os valores do método ```inicializa_nos``` para que fique igual a sua topologia.
+O próprio código torna o *JSON* retornado legível para o cliente final.
 
 ### O que melhorar no código
 
-Este programa não trata concorrência de eleição, já que deve haver um líder preestabelecido para que o mesmo funcione. Para testar concorrência, você deverá implementar um arquivo que irá intermediar as chamadas de eleições, e retornar o ```id``` do líder encontrado, assim como o momento em que a eleição de menor valor deixou de existir.
+O ideal seria ter o cliente separado do provedor, como um verdadeiro ```Cloud Broker```. Da forma que desenvolvemos, o cliente e o provedor são um só, sendo possível buscar, adicionar e liberar VMs. Se quiser implementar corretamente, basta criar um código provedor que irá fazer a ponte entre o uso/liberação das VMs do cliente com o *banco de dados* do ```Cloud Broker```.
+
+Outro ponto: não trata concorrência. Caso dois clientes solicitem a mesma VM, tecnicamente ambos estarão usando a mesma VM caso o *banco de dados* não atualize a tempo do segundo cliente buscar a VM. Para corrigir isso, basta criar um ```timer``` que vai esperar alguns breves segundos antes de liberar o uso para o primeiro cliente.
+
+Por fim, caso caia a conexão do cliente com o ```Cloud Broker```, a VM ficaria sendo usada para todo sempre. Um método que fique pingando o cliente a cada X segundos é o suficiente para solucionar esse problema.
 
 ## License
 
