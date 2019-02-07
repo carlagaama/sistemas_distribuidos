@@ -141,7 +141,7 @@ Caso opte por usar o ```Postman``` (altamente recomendado) para testar apenas as
 
   O *JSON* que será lido nesta rota deverá ter a seguinte estrutura:
   
-  ```
+  ```javascript
     {
       "qtd_vms": 2,
       "specs": {
