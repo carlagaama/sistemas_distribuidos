@@ -29,7 +29,7 @@ Pronto! Você acabou de criar uma VM no Google Cloud! Vá tomar um café, você 
 
 ### Inicialização inicial da VM
 
-  1. No canto superior direito, clique na seta ao lado do *SSH*, na categoria ```Conectar```, e selecione *Visualizar comando gcloud*.
+  1. Clique na seta ao lado do *SSH*, na categoria ```Conectar```, e selecione *Visualizar comando gcloud*.
   2. Na tela que abrirá, clique no botão *Executar no Cloud Shell*. Começará o processo de inialização da sua VM. Você verá uma tela desta forma:
 
 ![Google Cloud Shell](https://github.com/carlagaama/sistemas_distribuidos/blob/master/trabalho%20final/media/print2.png)
@@ -156,7 +156,7 @@ Caso opte por usar o ```Postman``` (altamente recomendado) para testar apenas as
   
   Caso a requisição tenha sucesso, o *JSON* que será retornado terá a seguinte estrutura:
 
-  ```
+  ```javascript
     {
       "data": {
           "vmsreturned": [
@@ -191,7 +191,7 @@ Caso opte por usar o ```Postman``` (altamente recomendado) para testar apenas as
   ```
   Caso o cliente peça mais VMs do que existem no*banco de dados*, o *JSON* retornado é:
   
-  ```
+  ```javascript
     {
       "data": {
           "vmsreturned": [
@@ -216,7 +216,7 @@ Caso opte por usar o ```Postman``` (altamente recomendado) para testar apenas as
   
   Em caso de falha, o *JSON* retornado será:
 
-  ```
+  ```javascript
     {
       "error": "Não existem MVs com estas especificações",
       "success": false
@@ -231,7 +231,7 @@ Caso opte por usar o ```Postman``` (altamente recomendado) para testar apenas as
   
   Esta rota é utilizada para adicionar uma VM no *banco de dados*, portanto o *JSON* deve conter todas as informações da VM. Exemplo:
   
-  ```
+  ```javascript
     {
       "provider": 5,
       "vm_specs": {
@@ -247,7 +247,7 @@ Caso opte por usar o ```Postman``` (altamente recomendado) para testar apenas as
   
   O *JSON* de sucesso retorna o ```id``` da VM que foi inserida no *banco de dados*:
   
-  ```
+  ```javascript
     {
         "success": true,
         "vm_id": "5c5b4715b443262bdc70fe9c"
@@ -260,7 +260,7 @@ Caso opte por usar o ```Postman``` (altamente recomendado) para testar apenas as
   
   Como o próprio nome diz, é por meio desta rota que o cliente libera a VM. O *JSON* é simples, apenas o ```id``` da VM que está sendo liberada é enviada para a API, que atualiza o campo ```using``` da VM para 0, podendo ser retornada em outras buscas.
   
-  ```
+  ```javascript
     {
         "objid": "5c4d82feabb6940577873cc2"
     }
@@ -268,7 +268,7 @@ Caso opte por usar o ```Postman``` (altamente recomendado) para testar apenas as
   
   O retorno é tão simples quanto a mensagem enviada:
   
-  ```
+  ```javascript
     {
       "success": true
     }
